@@ -19,24 +19,54 @@ impl Vec2 {
         };
     }
 
-    pub fn clamp(&self, minX: f64, maxX: f64, minY: f64, maxY: f64) -> Self {
+    pub fn wrap(&self, bounds: Vec2) -> Self {
         let mut x = self.x;
         let mut y = self.y;
 
-        if x > maxX {
-            x = maxX;
-        } else if self.x < minX {
-            x = minX;
+        if x > bounds.x {
+            x -= bounds.x;
+        } else if x < 0. {
+            x += bounds.x;
         }
 
-        if self.y > maxY {
-            y = maxY;
-        } else if self.y < minY {
-            y = minY;
+        if y > bounds.y {
+            y -= bounds.y;
+        } else if y < 0. {
+            y += bounds.y;
         }
 
         Vec2 { x: x, y: y }
     }
+}
+
+pub fn get_shortest_wrapped_path(a: Vec2, b: Vec2, bounds: Vec2) -> Vec2 {
+    let x1 = a.x - b.x;
+    let x2 = a.x - b.x - bounds.x;
+    let x3 = a.x - b.x + bounds.x;
+
+    let dx;
+    if x1.abs() < x2.abs() && x1.abs() < x3.abs() {
+        dx = x1;
+    } else if x2.abs() < x3.abs() {
+        dx = x2;
+    } else {
+        dx = x3;
+    }
+
+    let y1 = a.y - b.y;
+    let y2 = a.y - b.y - bounds.y;
+    let y3 = a.y - b.y + bounds.y;
+
+    let dy;
+    if y1.abs() < y2.abs() && y1.abs() < y3.abs() {
+        dy = y1;
+    } else if y2.abs() < y3.abs() {
+        dy = y2;
+    } else {
+        dy = y3;
+    }
+
+    return Vec2 { x: dx, y: dy };
 }
 
 impl ops::Add for Vec2 {

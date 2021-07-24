@@ -87,12 +87,13 @@ impl Agent for SimpleAgent {
                     && neighbour.get_id() != self.id
                     && self.last_itted_by != neighbour.get_id()
                 {
-                    let dist = (neighbour.get_position() - self.pos).magnitude();
+                    let dist =
+                        vec::get_shortest_wrapped_path(neighbour.get_position(), self.pos, bounds)
+                            .magnitude();
                     if dist <= it_distance {
                         // it the neighbour
                         self.last_itted = neighbour.get_id();
                         self.it = false;
-                        println!("{} itted {}", self.id, neighbour.get_id());
                         continue; // only allow an agent to it once per update
                     }
                 }
@@ -104,12 +105,13 @@ impl Agent for SimpleAgent {
                     && neighbour.get_id() != self.id
                     && self.last_itted != neighbour.get_id()
                 {
-                    let dist = (neighbour.get_position() - self.pos).magnitude();
+                    let dist =
+                        vec::get_shortest_wrapped_path(neighbour.get_position(), self.pos, bounds)
+                            .magnitude();
                     if dist <= it_distance {
                         // itted by the neighbour
                         self.last_itted_by = neighbour.get_id();
                         self.it = true;
-                        println!("{} was itted by {}", self.id, neighbour.get_id());
                         continue; // only allow an agent to be itted once per update
                     }
                 }
@@ -126,7 +128,9 @@ impl Agent for SimpleAgent {
                     && neighbour.get_id() != self.id
                     && self.last_itted_by != neighbour.get_id()
                 {
-                    let dist = (neighbour.get_position() - self.pos).magnitude();
+                    let dist =
+                        vec::get_shortest_wrapped_path(neighbour.get_position(), self.pos, bounds)
+                            .magnitude();
                     if dist < min_dist {
                         min_dist = dist;
                         target = Some(neighbour);
@@ -135,16 +139,16 @@ impl Agent for SimpleAgent {
             }
 
             if target.is_some() {
-                self.pos += (target.unwrap().get_position() - self.pos).normalised()
+                self.pos += vec::get_shortest_wrapped_path(
+                    target.unwrap().get_position(),
+                    self.pos,
+                    bounds,
+                )
+                .normalised()
                     * delta_t
                     * SPEED
-                    * 1.5;
-                self.pos = self.pos.clamp(
-                    it_distance,
-                    bounds.x - it_distance / 2.,
-                    it_distance,
-                    bounds.y - it_distance / 2.,
-                );
+                    * 1.1; // small speed boost given to itters
+                self.pos = self.pos.wrap(bounds);
             };
         } else {
             // if not it, find closest itter and run away from them
@@ -156,7 +160,9 @@ impl Agent for SimpleAgent {
                     && neighbour.get_id() != self.id
                     && self.last_itted != neighbour.get_id()
                 {
-                    let dist = (neighbour.get_position() - self.pos).magnitude();
+                    let dist =
+                        vec::get_shortest_wrapped_path(neighbour.get_position(), self.pos, bounds)
+                            .magnitude();
                     if dist < min_dist {
                         min_dist = dist;
                         assailant = Some(neighbour);
@@ -165,14 +171,15 @@ impl Agent for SimpleAgent {
             }
 
             if assailant.is_some() {
-                self.pos +=
-                    (assailant.unwrap().get_position() - self.pos).normalised() * -delta_t * SPEED;
-                self.pos = self.pos.clamp(
-                    it_distance,
-                    bounds.x - it_distance / 2.,
-                    it_distance,
-                    bounds.y - it_distance / 2.,
-                );
+                self.pos += vec::get_shortest_wrapped_path(
+                    assailant.unwrap().get_position(),
+                    self.pos,
+                    bounds,
+                )
+                .normalised()
+                    * -delta_t
+                    * SPEED;
+                self.pos = self.pos.wrap(bounds);
             }
         }
     }

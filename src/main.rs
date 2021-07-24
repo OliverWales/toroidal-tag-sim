@@ -13,23 +13,31 @@ use rand::Rng;
 mod agent;
 mod vec;
 
-const WIDTH: u32 = 500;
-const HEIGHT: u32 = 500;
-const ITTERS: u32 = 2;
-const RUNNERS: u32 = 20;
-const IT_DIST: f64 = 10.;
+// config
+const WIDTH: u32 = 1366;
+const HEIGHT: u32 = 768;
+const ITTERS: u32 = 50;
+const RUNNERS: u32 = 1000;
+const IT_DIST: f64 = 4.;
 
-const BG_COL: [f32; 4] = [0.5, 0.5, 0.5, 1.0];
-const ITTER_COL: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-const RUNNER_COL: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
+// colours
+const BG_COL: [f32; 4] = [0.1, 0.15, 0.2, 1.0];
+const ITTER_COL: [f32; 4] = [1.0, 0.2, 0.4, 1.0];
+const RUNNER_COL: [f32; 4] = [0.8, 0.8, 0.8, 1.0];
 
 fn main() {
     let opengl = OpenGL::V3_2;
-    let mut window: Window = WindowSettings::new("Tag Simulator", [WIDTH, HEIGHT])
-        .graphics_api(opengl)
-        .exit_on_esc(true)
-        .build()
-        .unwrap();
+    let mut window: Window = WindowSettings::new(
+        format!(
+            "Tag simulator {}x{} ({} taggers, {} runners)",
+            WIDTH, HEIGHT, ITTERS, RUNNERS
+        ),
+        [WIDTH, HEIGHT],
+    )
+    .graphics_api(opengl)
+    .exit_on_esc(true)
+    .build()
+    .unwrap();
     let mut gl = GlGraphics::new(opengl);
 
     let mut rng = rand::thread_rng();
