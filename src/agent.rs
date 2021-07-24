@@ -1,6 +1,5 @@
 use crate::vec;
-
-const IT_DIST: f64 = 1.;
+const SPEED: f64 = 20.;
 
 // NB: Vec<Box<dyn ...>> cloning implementation based on
 // https://stackoverflow.com/questions/50017987/cant-clone-vecboxtrait-because-trait-cannot-be-made-into-an-object
@@ -10,7 +9,13 @@ pub trait Agent: AgentClone {
     fn get_position(&self) -> vec::Vec2;
     fn is_it(&self) -> bool;
     fn last_itted_by(&self) -> i32;
-    fn update(&mut self, delta_t: f64, neighbours: &Vec<Box<dyn Agent>>, bounds: vec::Vec2) -> ();
+    fn update(
+        &mut self,
+        delta_t: f64,
+        neighbours: &Vec<Box<dyn Agent>>,
+        it_distance: f64,
+        bounds: vec::Vec2,
+    ) -> ();
 }
 
 pub trait AgentClone {
@@ -34,15 +39,17 @@ pub struct SimpleAgent {
     pub id: i32,
     pub pos: vec::Vec2,
     pub it: bool,
+    pub last_itted: i32,
     pub last_itted_by: i32,
 }
 
 impl SimpleAgent {
-    pub fn new(id: i32, pos: vec::Vec2, it: bool, last_itted_by: i32) -> Self {
+    pub fn new(id: i32, pos: vec::Vec2, it: bool, last_itted: i32, last_itted_by: i32) -> Self {
         SimpleAgent {
             id,
             pos,
             it,
+            last_itted,
             last_itted_by,
         }
     }
@@ -65,43 +72,60 @@ impl Agent for SimpleAgent {
         self.last_itted_by
     }
 
-    fn update(&mut self, delta_t: f64, neighbours: &Vec<Box<dyn Agent>>, bounds: vec::Vec2) {
+    fn update(
+        &mut self,
+        delta_t: f64,
+        neighbours: &Vec<Box<dyn Agent>>,
+        it_distance: f64,
+        bounds: vec::Vec2,
+    ) {
         // check if an "it" has occurred
         if self.it {
-            // check for runner within range that is not the one that itted you
+            // check for runner within range that is not the one that last itted you
             for neighbour in neighbours {
-                if !neighbour.is_it() && self.last_itted_by != neighbour.get_id() {
+                if !neighbour.is_it()
+                    && neighbour.get_id() != self.id
+                    && self.last_itted_by != neighbour.get_id()
+                {
                     let dist = (neighbour.get_position() - self.pos).magnitude();
-                    if dist <= IT_DIST {
+                    if dist <= it_distance {
+                        // it the neighbour
+                        self.last_itted = neighbour.get_id();
                         self.it = false;
                         println!("{} itted {}", self.id, neighbour.get_id());
-                        break;
+                        continue; // only allow an agent to it once per update
                     }
                 }
             }
         } else {
-            // check for itter within range that is not the one that you itted
+            // check for itter within range that is not the one that you itted last
             for neighbour in neighbours {
-                if neighbour.is_it() && neighbour.last_itted_by() != self.id {
+                if neighbour.is_it()
+                    && neighbour.get_id() != self.id
+                    && self.last_itted != neighbour.get_id()
+                {
                     let dist = (neighbour.get_position() - self.pos).magnitude();
-                    if dist <= IT_DIST {
-                        self.it = true;
+                    if dist <= it_distance {
+                        // itted by the neighbour
                         self.last_itted_by = neighbour.get_id();
+                        self.it = true;
                         println!("{} was itted by {}", self.id, neighbour.get_id());
-                        break;
+                        continue; // only allow an agent to be itted once per update
                     }
                 }
             }
         }
 
-        // update according to current "it" status
         if self.it {
-            // find closest runner and go towards them
+            // if it, find closest runner and chase towards them
             let mut min_dist = std::f64::MAX;
             let mut target = None;
 
             for neighbour in neighbours {
-                if !neighbour.is_it() {
+                if !neighbour.is_it()
+                    && neighbour.get_id() != self.id
+                    && self.last_itted_by != neighbour.get_id()
+                {
                     let dist = (neighbour.get_position() - self.pos).magnitude();
                     if dist < min_dist {
                         min_dist = dist;
@@ -111,26 +135,45 @@ impl Agent for SimpleAgent {
             }
 
             if target.is_some() {
-                self.pos += (target.unwrap().get_position() - self.pos).normalised() * delta_t;
-                self.pos.clamp(bounds);
+                self.pos += (target.unwrap().get_position() - self.pos).normalised()
+                    * delta_t
+                    * SPEED
+                    * 1.5;
+                self.pos = self.pos.clamp(
+                    it_distance,
+                    bounds.x - it_distance / 2.,
+                    it_distance,
+                    bounds.y - it_distance / 2.,
+                );
             };
         } else {
-            // find closest iter and go away from them
+            // if not it, find closest itter and run away from them
             let mut min_dist = std::f64::MAX;
             let mut assailant = None;
 
             for neighbour in neighbours {
-                let dist = (neighbour.get_position() - self.pos).magnitude();
-                if dist < min_dist {
-                    min_dist = dist;
-                    assailant = Some(neighbour);
+                if neighbour.is_it()
+                    && neighbour.get_id() != self.id
+                    && self.last_itted != neighbour.get_id()
+                {
+                    let dist = (neighbour.get_position() - self.pos).magnitude();
+                    if dist < min_dist {
+                        min_dist = dist;
+                        assailant = Some(neighbour);
+                    }
                 }
             }
 
             if assailant.is_some() {
-                self.pos += (assailant.unwrap().get_position() - self.pos).normalised() * -delta_t;
-                self.pos.clamp(bounds);
-            };
+                self.pos +=
+                    (assailant.unwrap().get_position() - self.pos).normalised() * -delta_t * SPEED;
+                self.pos = self.pos.clamp(
+                    it_distance,
+                    bounds.x - it_distance / 2.,
+                    it_distance,
+                    bounds.y - it_distance / 2.,
+                );
+            }
         }
     }
 }

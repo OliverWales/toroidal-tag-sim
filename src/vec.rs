@@ -11,7 +11,7 @@ impl Vec2 {
         (self.x.powi(2) + self.y.powi(2)).sqrt()
     }
 
-    pub fn normalised(self) -> Self {
+    pub fn normalised(&self) -> Self {
         let magnitude = self.magnitude();
         return Vec2 {
             x: self.x / magnitude,
@@ -19,18 +19,23 @@ impl Vec2 {
         };
     }
 
-    pub fn clamp(mut self, other: Vec2) -> () {
-        if self.x > other.x {
-            self.x = other.x;
-        } else if self.x < 0. {
-            self.x = 0.;
+    pub fn clamp(&self, minX: f64, maxX: f64, minY: f64, maxY: f64) -> Self {
+        let mut x = self.x;
+        let mut y = self.y;
+
+        if x > maxX {
+            x = maxX;
+        } else if self.x < minX {
+            x = minX;
         }
 
-        if self.y > other.y {
-            self.y = other.y;
-        } else if self.y < 0. {
-            self.y = 0.;
+        if self.y > maxY {
+            y = maxY;
+        } else if self.y < minY {
+            y = minY;
         }
+
+        Vec2 { x: x, y: y }
     }
 }
 
@@ -68,5 +73,11 @@ impl ops::Mul<f64> for Vec2 {
             x: self.x * s,
             y: self.y * s,
         }
+    }
+}
+
+impl std::fmt::Display for Vec2 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        write!(f, "({}, {})", self.x, self.y)
     }
 }
