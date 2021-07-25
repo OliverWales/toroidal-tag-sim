@@ -37,18 +37,30 @@ Due to their speed advantage, the itting agents are always eventually able to ca
 
 ## Performance
 
-Since the agents all only consider the position of their neighbours at the previous timestep, they can all be updated entirely independently. This makes this process highly parallisable. I decided to take advantage of this by using `Rayon` to replace the `agents.iter_mut().for_each(...)` with its parallel implementation `agents.par_iter_mut().for_each(...)`. This made no difference at 200 runners, but for 20,000 achieved a speedup of almost 50%.
+Since the agents all only consider the position of their neighbours at the previous timestep, they can all be updated entirely independently. This makes this process highly parallisable. I decided to take advantage of this by using `Rayon` to replace the `agents.iter_mut().for_each(...)` with its parallel implementation `agents.par_iter_mut().for_each(...)`. This made virtually no difference at 400 runners, but for 25,600 achieved a speedup of more than 2x.
 
-| Itters | Runners | Parallel? | ms/Update | %chg | ms/Frame | %chg |
-| ------ | ------- | --------- | --------- | ---- | -------- | ---- |
-| 50     | 200     | N         | 8.39      | -    | 17.21    | -    |
-| 50     | 2,000   | N         | 46.02     | -    | 46.00    | -    |
-| 50     | 20,000  | N         | 1902.16   | -    | 1851.61  | -    |
-| 50     | 200     | Y         | 8.4       | -0.1 | 17.24    | -0.2 |
-| 50     | 2,000   | Y         | 37.05     | 19.5 | 37.04    | 19.5 |
-| 50     | 20,000  | Y         | 964.57    | 49.3 | 953.87   | 48.5 |
+| Itters | Runners | Parallel? | Updates/s | %chg  | Frames/s | %chg  |
+| ------ | ------- | --------- | --------- | ----- | -------- | ----- |
+| 50     | 200     | N         | 119.12    | -     | 57.72    | -     |
+| 50     | 400     | N         | 118.81    | -     | 57.62    | -     |
+| 50     | 800     | N         | 102.05    | -     | 48.57    | -     |
+| 50     | 1600    | N         | 27.49     | -     | 27.50    | -     |
+| 50     | 3200    | N         | 10.64     | -     | 10.65    | -     |
+| 50     | 6400    | N         | 3.55      | -     | 3.56     | -     |
+| 50     | 12800   | N         | 1.08      | -     | 1.10     | -     |
+| 50     | 25600   | N         | 0.30      | -     | 0.32     | -     |
+| 50     | 200     | Y         | 119.02    | -0.1  | 57.70    | 0.0   |
+| 50     | 400     | Y         | 118.55    | -0.2  | 57.53    | -0.2  |
+| 50     | 800     | Y         | 108.64    | 6.5   | 56.71    | 16.8  |
+| 50     | 1600    | Y         | 32.45     | 18.0  | 32.46    | 18.0  |
+| 50     | 3200    | Y         | 15.12     | 42.1  | 15.11    | 41.9  |
+| 50     | 6400    | Y         | 6.25      | 76.1  | 6.25     | 75.6  |
+| 50     | 12800   | Y         | 2.12      | 96.3  | 2.13     | 93.6  |
+| 50     | 25600   | Y         | 0.67      | 123.3 | 0.68     | 112.5 |
 
-This table shows both the average milliseconds _between_ agent update ticks and _between_ each frame, not the time taken by these operations. This is because the updates and renders are not (currently) performed concurrently. These times were recorded using my `FPSCounter` implementation and the average over the first 60 seconds is recorded here.
+This table shows both the average milliseconds _between_ agent update ticks and _between_ each frame, not the time taken by these operations. This is because the updates and renders are not (currently) performed concurrently. These times were recorded using my `FPSCounter` implementation and the average over the first 60 seconds is recorded here. The same data is plotted on a log-log plot below:
+
+![Performance Chart](./pictures/Performance.png)
 
 In an attempt to improve performance further, I implemented a kd-tree (see `agent_tree.rs`). This is constructed once per agent per frame, and allows the finding of neighbours in `O(log n)` worst case time complexity as opposed to the `O(n)` acheived by linearly searching a vector. It is used by substituting the following code into the update case:
 

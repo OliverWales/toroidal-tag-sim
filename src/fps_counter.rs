@@ -23,8 +23,9 @@ impl FPSCounter {
 
         if elapsed_time > Duration::new(self.update_period, 0) {
             println!(
-                "[{}] {:.2}ms per frame",
+                "[{}] {:.2} FPS - {:.2} ms/Frame",
                 self.name,
+                self.elapsed_frames as f64 / elapsed_time.as_millis() as f64 * 1000.,
                 elapsed_time.as_millis() as f64 / self.elapsed_frames as f64
             );
             self.last_frame_time = Instant::now();

@@ -77,8 +77,8 @@ fn main() {
 
     // update-render loop
     let mut events = Events::new(EventSettings::new());
-    let mut update_counter = FPSCounter::new("Update".to_string(), 60);
-    let mut render_counter = FPSCounter::new("Render".to_string(), 60);
+    let mut update_counter = FPSCounter::new("Update".to_string(), 10);
+    let mut render_counter = FPSCounter::new("Render".to_string(), 10);
 
     while let Some(e) = events.next(&mut window) {
         // update
