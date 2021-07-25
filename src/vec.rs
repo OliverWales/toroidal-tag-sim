@@ -1,5 +1,8 @@
 use std::ops;
 
+// Vec2 implementation to encapsulate 2D vectors and the operations commonly
+// used on them
+
 #[derive(Clone, Copy)]
 pub struct Vec2 {
     pub x: f64,

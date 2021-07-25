@@ -20,9 +20,9 @@ mod vec;
 const WIDTH: u32 = 1366;
 const HEIGHT: u32 = 768;
 const ITTERS: u32 = 50;
-const RUNNERS: u32 = 20000;
-const SPEED: f64 = 10.;
-const IT_RANGE: f64 = 1.5;
+const RUNNERS: u32 = 5000;
+const SPEED: f64 = 20.;
+const IT_RANGE: f64 = 2.;
 
 // colours
 const BG_COL: [f32; 4] = [0.1, 0.1, 0.2, 1.0];
@@ -57,8 +57,6 @@ fn main() {
             i as i32,
             vec::Vec2 { x, y },
             true,
-            -1,
-            -1,
         )));
     }
 
@@ -70,8 +68,6 @@ fn main() {
             (i + ITTERS) as i32,
             vec::Vec2 { x, y },
             false,
-            -1,
-            -1,
         )));
     }
 
@@ -85,6 +81,7 @@ fn main() {
         if let Some(args) = e.update_args() {
             let last_agents = agents.clone();
 
+            // rayon par_iter_mut creates parallel for_each
             agents.par_iter_mut().for_each(|agent| {
                 agent.update(
                     args.dt,

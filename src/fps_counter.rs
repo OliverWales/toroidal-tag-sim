@@ -1,5 +1,8 @@
 use std::time::{Duration, Instant};
 
+// Named performance counter implementation to track frames per second and
+// milliseconds per frame
+
 pub struct FPSCounter {
     name: String,
     update_period: u64,

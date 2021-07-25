@@ -1,6 +1,8 @@
 use crate::agent;
 use crate::vec;
 
+// 2D-tree data structure intended to provide high speed neighbour search
+
 type BoxedAgent = Box<dyn agent::Agent>;
 
 pub trait AgentCollection<BoxedAgent> {
@@ -44,35 +46,41 @@ impl AgentTree {
         }
 
         let root = root.unwrap();
-        let mut res: Vec<BoxedAgent> = Vec::new();
+        let mut result: Vec<BoxedAgent> = Vec::new();
 
         if x_axis {
-            // If x <= max_x need to check right subtree
+            // if x <= max_x need to check right subtree
             if root.node.get_position().x <= max_x {
-                res.append(&mut self.range_search(root.right, min_x, min_y, max_x, max_y, !x_axis));
+                result.append(
+                    &mut self.range_search(root.right, min_x, min_y, max_x, max_y, !x_axis),
+                );
             }
-            // If x >= min_x need to check left subtree
+            // if x >= min_x need to check left subtree
             if root.node.get_position().x >= min_x {
-                res.append(&mut self.range_search(root.left, min_x, min_y, max_x, max_y, !x_axis));
+                result
+                    .append(&mut self.range_search(root.left, min_x, min_y, max_x, max_y, !x_axis));
             }
         } else {
-            // If y <= max_y need to check right subtree
+            // if y <= max_y need to check right subtree
             if root.node.get_position().y <= max_y {
-                res.append(&mut self.range_search(root.right, min_x, min_y, max_x, max_y, !x_axis));
+                result.append(
+                    &mut self.range_search(root.right, min_x, min_y, max_x, max_y, !x_axis),
+                );
             }
-            // If y >= min_y need to check left subtree
+            // if y >= min_y need to check left subtree
             if root.node.get_position().y >= min_y {
-                res.append(&mut self.range_search(root.left, min_x, min_y, max_x, max_y, !x_axis));
+                result
+                    .append(&mut self.range_search(root.left, min_x, min_y, max_x, max_y, !x_axis));
             }
         }
 
-        // If the agent is in range range add to the result
+        // if the agent is in range range add to the result
         if root.node.get_position().x >= min_x
             && root.node.get_position().y >= min_y
             && root.node.get_position().x <= max_x
             && root.node.get_position().y <= max_y
         {
-            res.push(root.node);
+            result.push(root.node);
         }
 
         return res;

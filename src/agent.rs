@@ -1,6 +1,7 @@
 use crate::vec;
 
-// NB: Vec<Box<dyn ...>> cloning implementation based on
+// Agent trait as interface for agent behaviour. Simple agent as concrete
+// implementation of this. NB: Vec<Box<dyn ...>> cloning implementation based on
 // https://stackoverflow.com/questions/50017987/cant-clone-vecboxtrait-because-trait-cannot-be-made-into-an-object
 
 pub trait Agent: AgentClone + Send + Sync {
@@ -43,13 +44,13 @@ pub struct SimpleAgent {
 }
 
 impl SimpleAgent {
-    pub fn new(id: i32, pos: vec::Vec2, it: bool, last_itted: i32, last_itted_by: i32) -> Self {
+    pub fn new(id: i32, pos: vec::Vec2, it: bool) -> Self {
         SimpleAgent {
-            id,
-            pos,
-            it,
-            last_itted,
-            last_itted_by,
+            id: id,
+            pos: pos,
+            it: it,
+            last_itted: -1,
+            last_itted_by: -1,
         }
     }
 }

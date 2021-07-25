@@ -15,7 +15,7 @@ An agent based simulation of the classic playground game It (AKA Tag) as played 
 
 2. Run `cargo run` from the root of the repo
 
-`TODO: move options to config file or command line argumements to avoid recompilation.`
+`TODO: move options to config file or command line arguments to avoid recompilation.`
 
 ## Agent Strategy
 
@@ -130,3 +130,15 @@ agents.iter_mut().for_each(|agent| {
     );
 });
 ```
+
+## Future Improvements
+
+There is far more to this project than could possibly be explored in a single weekend. Some of the ideas I have for further development are:
+
+- Move options to config file or command line argumements to avoid recompilation for each change in setup
+- Further explore the space of agent behaviours - vision, memory, neural networks etc.
+- Make the environment more interesting, e.g. by adding obstacles or powerups
+- Implement unit tests to validate e.g. the `AgentTree` implementation
+- Create a 3D visualisation with camera controls, perhaps even let the user play
+- Improve the parallelisation e.g. by using the GPU to unlock further performance and scale
+- Allow scripting of agent behaviours using an interpreted language such as Python
