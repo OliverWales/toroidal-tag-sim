@@ -50,6 +50,37 @@ Since the agents all only consider the position of their neighbours at the previ
 
 This table shows both the average milliseconds _between_ agent update ticks and _between_ each frame, not the time taken by these operations. This is because the updates and renders are not (currently) performed concurrently. These times were recorded using my `FPSCounter` implementation and the average over the first 60 seconds is recorded here.
 
+In an attempt to improve performance further, I implemented a kd-tree (see `agent_tree.rs`). This is constructed once per agent per frame, and allows the finding of neighbours in `O(log n)` worst case time complexity as opposed to the `O(n)` acheived by linearly searching a vector. It is used by substituting the following code into the update case:
+
+```rust
+let agent_tree = AgentTree::new(&agents);
+
+agents.par_iter_mut().for_each(|agent| {
+    agent.update(
+        args.dt,
+        &agent_tree.get_in_euclidean_range(agent.get_position(), 100.),
+        agent::Options {
+            bounds: vec::Vec2 {
+                x: WIDTH as f64,
+                y: HEIGHT as f64,
+            },
+            it_range: IT_RANGE,
+            speed: SPEED,
+        },
+    );
+});
+```
+
+Despite the substantial theoretical reduction in worse case time complexity, this implementation does not have good performance at all. In the 20,000 agent case, it takes upwards of 60,000ms / Frame, that is, less than one frame per minute.
+
+I suspect this may be due to one or more of the following:
+
+- The use of boxed traits rather than fixed size objects results in enourmous amounts of heap allocation and dynamic dispatch
+- Under the hood, Rust/Rayon may well be adding locks to the data structure to maintain consistency, and may be facing high contention
+- My implementation may contain a bug
+
+Furthermore, this implementation does not (yet) account for the wrapping of the space around the edges, meaning that its results may vary from that with the simple vector implementation.
+
 ## Implementation Difficulties
 
 One of the challenges that I faced when learning Rust from my background in less memory-safe languages such as C++ is the many constraints on the availability of mutable references.
