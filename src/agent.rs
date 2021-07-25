@@ -3,7 +3,7 @@ use crate::vec;
 // NB: Vec<Box<dyn ...>> cloning implementation based on
 // https://stackoverflow.com/questions/50017987/cant-clone-vecboxtrait-because-trait-cannot-be-made-into-an-object
 
-pub trait Agent: AgentClone {
+pub trait Agent: AgentClone + Send + Sync {
     fn get_id(&self) -> i32;
     fn get_position(&self) -> vec::Vec2;
     fn is_it(&self) -> bool;

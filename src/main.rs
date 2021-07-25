@@ -3,23 +3,26 @@ extern crate graphics;
 extern crate opengl_graphics;
 extern crate piston;
 
+use fps_counter::FPSCounter;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::event_loop::{EventSettings, Events};
 use piston::input::{RenderEvent, UpdateEvent};
 use piston::window::WindowSettings;
 use rand::Rng;
+use rayon::prelude::*;
 
 mod agent;
+mod fps_counter;
 mod vec;
 
 // config
 const WIDTH: u32 = 1366;
 const HEIGHT: u32 = 768;
 const ITTERS: u32 = 50;
-const RUNNERS: u32 = 1000;
-const SPEED: f64 = 100.;
-const IT_RANGE: f64 = 4.;
+const RUNNERS: u32 = 20000;
+const SPEED: f64 = 10.;
+const IT_RANGE: f64 = 1.5;
 
 // colours
 const BG_COL: [f32; 4] = [0.1, 0.1, 0.2, 1.0];
@@ -31,7 +34,7 @@ fn main() {
 
     let mut window: Window = WindowSettings::new(
         format!(
-            "Tag simulator {}x{} ({} taggers, {} runners)",
+            "Toroidal Tag Simulator {}x{} ({} taggers, {} runners)",
             WIDTH, HEIGHT, ITTERS, RUNNERS
         ),
         [WIDTH, HEIGHT],
@@ -74,15 +77,18 @@ fn main() {
 
     // update-render loop
     let mut events = Events::new(EventSettings::new());
+    let mut update_counter = FPSCounter::new("Update".to_string(), 60);
+    let mut render_counter = FPSCounter::new("Render".to_string(), 60);
+
     while let Some(e) = events.next(&mut window) {
         // update
         if let Some(args) = e.update_args() {
-            let mut last_agents = agents.clone();
+            let last_agents = agents.clone();
 
-            for agent in &mut agents {
+            agents.par_iter_mut().for_each(|agent| {
                 agent.update(
                     args.dt,
-                    &mut last_agents,
+                    &last_agents,
                     agent::Options {
                         bounds: vec::Vec2 {
                             x: WIDTH as f64,
@@ -92,7 +98,9 @@ fn main() {
                         speed: SPEED,
                     },
                 );
-            }
+            });
+
+            update_counter.tick();
         }
 
         // render
@@ -117,6 +125,8 @@ fn main() {
                     }
                 })
             }
+
+            render_counter.tick();
         }
     }
 }
