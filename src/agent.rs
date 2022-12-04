@@ -9,7 +9,7 @@ pub trait Agent: AgentClone + Send + Sync {
     fn get_position(&self) -> vec::Vec2;
     fn is_it(&self) -> bool;
     fn last_itted_by(&self) -> i32;
-    fn update(&mut self, delta_t: f64, neighbours: &Vec<Box<dyn Agent>>, options: Options) -> ();
+    fn update(&mut self, delta_t: f64, neighbours: &[Box<dyn Agent>], options: Options);
 }
 
 pub trait AgentClone {
@@ -46,9 +46,9 @@ pub struct SimpleAgent {
 impl SimpleAgent {
     pub fn new(id: i32, pos: vec::Vec2, it: bool) -> Self {
         SimpleAgent {
-            id: id,
-            pos: pos,
-            it: it,
+            id,
+            pos,
+            it,
             last_itted: -1,
             last_itted_by: -1,
         }
@@ -72,7 +72,7 @@ impl Agent for SimpleAgent {
         self.last_itted_by
     }
 
-    fn update(&mut self, delta_t: f64, neighbours: &Vec<Box<dyn Agent>>, options: Options) {
+    fn update(&mut self, delta_t: f64, neighbours: &[Box<dyn Agent>], options: Options) {
         // check if an "it" has occurred
         if self.it {
             // check for runner within range that is not the one that last itted you
@@ -141,16 +141,13 @@ impl Agent for SimpleAgent {
                 }
             }
 
-            if target.is_some() {
-                self.pos += vec::get_shortest_wrapped_path(
-                    target.unwrap().get_position(),
-                    self.pos,
-                    options.bounds,
-                )
-                .normalised()
-                    * delta_t
-                    * options.speed
-                    * 1.1; // small speed boost given to itters
+            if let Some(t) = target {
+                self.pos +=
+                    vec::get_shortest_wrapped_path(t.get_position(), self.pos, options.bounds)
+                        .normalised()
+                        * delta_t
+                        * options.speed
+                        * 1.1; // small speed boost given to itters
                 self.pos = self.pos.wrap(options.bounds);
             };
         } else {
@@ -176,15 +173,12 @@ impl Agent for SimpleAgent {
                 }
             }
 
-            if assailant.is_some() {
-                self.pos += vec::get_shortest_wrapped_path(
-                    assailant.unwrap().get_position(),
-                    self.pos,
-                    options.bounds,
-                )
-                .normalised()
-                    * -delta_t
-                    * options.speed;
+            if let Some(a) = assailant {
+                self.pos +=
+                    vec::get_shortest_wrapped_path(a.get_position(), self.pos, options.bounds)
+                        .normalised()
+                        * -delta_t
+                        * options.speed;
                 self.pos = self.pos.wrap(options.bounds);
             }
         }

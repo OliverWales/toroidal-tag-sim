@@ -16,10 +16,10 @@ impl Vec2 {
 
     pub fn normalised(&self) -> Self {
         let magnitude = self.magnitude();
-        return Vec2 {
+        Vec2 {
             x: self.x / magnitude,
             y: self.y / magnitude,
-        };
+        }
     }
 
     pub fn wrap(&self, bounds: Vec2) -> Self {
@@ -38,7 +38,7 @@ impl Vec2 {
             y += bounds.y;
         }
 
-        Vec2 { x: x, y: y }
+        Vec2 { x, y }
     }
 }
 
@@ -69,7 +69,7 @@ pub fn get_shortest_wrapped_path(a: Vec2, b: Vec2, bounds: Vec2) -> Vec2 {
         dy = y3;
     }
 
-    return Vec2 { x: dx, y: dy };
+    Vec2 { x: dx, y: dy }
 }
 
 impl ops::Add for Vec2 {

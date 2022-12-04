@@ -13,14 +13,14 @@ pub struct FPSCounter {
 impl FPSCounter {
     pub fn new(name: String, update_period: u64) -> FPSCounter {
         FPSCounter {
-            name: name,
-            update_period: update_period,
+            name,
+            update_period,
             last_frame_time: Instant::now(),
             elapsed_frames: 0,
         }
     }
 
-    pub fn tick(&mut self) -> () {
+    pub fn tick(&mut self) {
         let elapsed_time = self.last_frame_time.elapsed();
         self.elapsed_frames += 1;
 
